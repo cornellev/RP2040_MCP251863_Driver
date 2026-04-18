@@ -36,6 +36,11 @@
 *.exe
 *.out
 *.app
-
 # debug information files
 *.dwo
+
+#cmake
+CMakeFiles/
+
+#make
+Makefile
