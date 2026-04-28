@@ -97,6 +97,7 @@ int MCP251863::writeAddr(uint16_t startAddr, uint8_t* data, size_t len) {
             break;
         case WM_MCP_SAFE:
             cmd = CMD_MCP_WRASF;
+            break;
         default: 
             return 0;
     } 
@@ -503,7 +504,7 @@ int MCP251863::getFLTCode() {
 int MCP251863::getICode() {
     uint8_t buff;
     readAddr(REG_MCP_C1VEC, &buff+3, 1);
-    if (buff > 1001010) {
+    if (buff > 0b1001010) {
         return -1;
     }
     return buff;
