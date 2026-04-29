@@ -3,7 +3,7 @@ add_library(
     src/mcp251863.cpp
 )
 
-target_include_directories(my_library PUBLIC
+target_include_directories(rp2040_mcp251863 PUBLIC
     ${CMAKE_CURRENT_LIST_DIR}/include
 )
 
