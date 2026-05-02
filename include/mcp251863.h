@@ -61,39 +61,39 @@ enum fifo_int_mode_MCP251863_t : uint8_t {
 };
 
 enum reg_addr_MCP251863_t : uint16_t {
-    REG_MCP_OSC            = 0xE00,
-    REG_MCP_IOCON          = 0xE04,
-    REG_MCP_CRC            = 0xE08,
-    REG_MCP_ECCCON         = 0xE0C,
-    REG_MCP_ECCSTAT        = 0xE10,
-    REG_MCP_DEVID          = 0xE14,
-    REG_MCP_C1CON          = 0x0,
-    REG_MCP_C1NBTCFG       = 0x4,
-    REG_MCP_C1DBTCFG       = 0x8,
-    REG_MCP_C1TDC          = 0xC,
-    REG_MCP_C1TBC          = 0x10,
-    REG_MCP_C1TSCON        = 0x14,
-    REG_MCP_C1VEC          = 0x18,
-    REG_MCP_C1INT          = 0x1C,
-    REG_MCP_C1RXIF         = 0x20,
-    REG_MCP_C1TXIF         = 0x24,
-    REG_MCP_C1RXOVIF       = 0x28,
-    REG_MCP_C1TXATIF       = 0x2C,
-    REG_MCP_C1TXREQ        = 0x30,
-    REG_MCP_C1TREC         = 0x34,
-    REG_MCP_C1BDIAGx       = 0x38, // 4 addresses between each
-    REG_MCP_C1TEFCON       = 0x40,
-    REG_MCP_C1TEFSTA       = 0x44,
-    REG_MCP_C1TEFUA        = 0x48,
-    REG_MCP_C1TXQCON       = 0x50,
-    REG_MCP_C1TXQSTA       = 0x54,
-    REG_MCP_C1TXQUA        = 0x58,
-    REG_MCP_C1FIFOCONx     = 0x5C,  // 12 addresses between each
-    REG_MCP_C1FIFOSTAx     = 0x60,  // 12 addresses between each
-    REG_MCP_C1FIFOUAx      = 0x64,  // 12 addresses between each
-    REG_MCP_C1FLTCONx      = 0x1D0, // 4 addresses between each
-    REG_MCP_C1FLTOBJx      = 0x1F8, // 8 addresses between each
-    REG_MCP_C1MASKx        = 0x1F4  // 8 addresses between each
+    REG_MCP_OSC        = 0xE00,
+    REG_MCP_IOCON      = 0xE04,
+    REG_MCP_CRC        = 0xE08,
+    REG_MCP_ECCCON     = 0xE0C,
+    REG_MCP_ECCSTAT    = 0xE10,
+    REG_MCP_DEVID      = 0xE14,
+    REG_MCP_C1CON      = 0x0,
+    REG_MCP_C1NBTCFG   = 0x4,
+    REG_MCP_C1DBTCFG   = 0x8,
+    REG_MCP_C1TDC      = 0xC,
+    REG_MCP_C1TBC      = 0x10,
+    REG_MCP_C1TSCON    = 0x14,
+    REG_MCP_C1VEC      = 0x18,
+    REG_MCP_C1INT      = 0x1C,
+    REG_MCP_C1RXIF     = 0x20,
+    REG_MCP_C1TXIF     = 0x24,
+    REG_MCP_C1RXOVIF   = 0x28,
+    REG_MCP_C1TXATIF   = 0x2C,
+    REG_MCP_C1TXREQ    = 0x30,
+    REG_MCP_C1TREC     = 0x34,
+    REG_MCP_C1BDIAGx   = 0x38,  // 4 addresses between each
+    REG_MCP_C1TEFCON   = 0x40,
+    REG_MCP_C1TEFSTA   = 0x44,
+    REG_MCP_C1TEFUA    = 0x48,
+    REG_MCP_C1TXQCON   = 0x50,
+    REG_MCP_C1TXQSTA   = 0x54,
+    REG_MCP_C1TXQUA    = 0x58,
+    REG_MCP_C1FIFOCONx = 0x5C,   // 12 addresses between each
+    REG_MCP_C1FIFOSTAx = 0x60,   // 12 addresses between each
+    REG_MCP_C1FIFOUAx  = 0x64,   // 12 addresses between each
+    REG_MCP_C1FLTCONx  = 0x1D0,  // 4 addresses between each
+    REG_MCP_C1FLTOBJx  = 0x1F8,  // 8 addresses between each
+    REG_MCP_C1MASKx    = 0x1F4   // 8 addresses between each
 };
 
 enum fifo_mode_MCP251863_t : uint8_t { FIFO_MODE_MCP_TX = 1, FIFO_MODE_MCP_RX = 0 };
@@ -165,33 +165,33 @@ struct bit_timing_MCP251863_t {
 };
 
 struct canfd_frame_MCP251863_t {
-    uint32_t id;              // CAN ID (11-bit for std, 29-bit for ext)
-    uint8_t  dlc;             // Data length code (register value)
-    uint8_t  len;             // Actual payload length in bytes
-    bool     ide;             // Extended ID flag
-    bool     fdf;             // FD frame flag
-    bool     brs;             // Bit rate switch flag
-    bool     rtr;             // Remote transmission request
-    bool     esi;             // Error status indicator
-    bool     sid11;           // SID11 field for CAN-FD base frames
-    bool     valid;           // Frame contains valid data
-    uint8_t  filter_hit;      // Filter index that matched (RX only)
-    uint32_t sequence;        // Sequence number (TX only)
-    bool     timestamp_valid; // Timestamp field is populated
-    uint32_t timestamp;       // Received timestamp (RX only, if enabled)
-    uint8_t  data[64];        // Payload bytes
+    uint32_t id;           // CAN ID (11-bit for std, 29-bit for ext)
+    uint8_t dlc;           // Data length code (register value)
+    uint8_t len;           // Actual payload length in bytes
+    bool ide;              // Extended ID flag
+    bool fdf;              // FD frame flag
+    bool brs;              // Bit rate switch flag
+    bool rtr;              // Remote transmission request
+    bool esi;              // Error status indicator
+    bool sid11;            // SID11 field for CAN-FD base frames
+    bool valid;            // Frame contains valid data
+    uint8_t filter_hit;    // Filter index that matched (RX only)
+    uint32_t sequence;     // Sequence number (TX only)
+    bool timestamp_valid;  // Timestamp field is populated
+    uint32_t timestamp;    // Received timestamp (RX only, if enabled)
+    uint8_t data[64];      // Payload bytes
 };
 
 struct init_config_MCP251863_t {
-    int      enablePll;          // Enable PLL (multiply oscillator by 10)
-    int      sclkDiv2;           // Divide SCLK by 2
-    int      enableTdc;          // Enable Transmitter Delay Compensation
-    int      rxTimestampEnable;  // Capture timestamp in received frames
-    uint8_t  tdcOffset;          // TDC offset (SSP position in TQs)
-    uint8_t  txFifo;             // TX FIFO number (1-31)
-    uint8_t  rxFifo;             // RX FIFO number (1-31, must differ from txFifo)
-    uint8_t  txFifoDepth;        // TX FIFO depth (1-32 messages)
-    uint8_t  rxFifoDepth;        // RX FIFO depth (1-32 messages)
+    int enablePll;          // Enable PLL (multiply oscillator by 10)
+    int sclkDiv2;           // Divide SCLK by 2
+    int enableTdc;          // Enable Transmitter Delay Compensation
+    int rxTimestampEnable;  // Capture timestamp in received frames
+    uint8_t tdcOffset;      // TDC offset (SSP position in TQs)
+    uint8_t txFifo;         // TX FIFO number (1-31)
+    uint8_t rxFifo;         // RX FIFO number (1-31, must differ from txFifo)
+    uint8_t txFifoDepth;    // TX FIFO depth (1-32 messages)
+    uint8_t rxFifoDepth;    // RX FIFO depth (1-32 messages)
     pl_size_MCP251863_t txPayloadSize;
     pl_size_MCP251863_t rxPayloadSize;
     bit_timing_MCP251863_t nominalBitTiming;
@@ -208,28 +208,28 @@ struct status_MCP251863_t {
     uint32_t bdiag0;
     uint32_t bdiag1;
     uint32_t crc;
-    bool     bus_off;
-    bool     tx_error_passive;
-    bool     rx_error_passive;
-    bool     tx_error_warning;
-    bool     rx_error_warning;
-    bool     error_warning;
-    uint8_t  tx_error_count;
-    uint8_t  rx_error_count;
-    bool     spi_crc_format_error;
-    bool     spi_crc_error;
+    bool bus_off;
+    bool tx_error_passive;
+    bool rx_error_passive;
+    bool tx_error_warning;
+    bool rx_error_warning;
+    bool error_warning;
+    uint8_t tx_error_count;
+    uint8_t rx_error_count;
+    bool spi_crc_format_error;
+    bool spi_crc_error;
 };
 
 struct fifo_status_MCP251863_t {
     uint8_t fifo_index;
-    bool    tx_aborted;
-    bool    tx_lost_arbitration;
-    bool    tx_error;
-    bool    tx_attempts_exhausted;
-    bool    rx_overflow;
-    bool    empty_or_full;
-    bool    half_empty_or_half_full;
-    bool    not_full_or_not_empty;
+    bool tx_aborted;
+    bool tx_lost_arbitration;
+    bool tx_error;
+    bool tx_attempts_exhausted;
+    bool rx_overflow;
+    bool empty_or_full;
+    bool half_empty_or_half_full;
+    bool not_full_or_not_empty;
 };
 
 // Bit timing presets for a 40 MHz CAN clock.
@@ -237,83 +237,93 @@ struct fifo_status_MCP251863_t {
 //   500 K: (0+1)*(62+15+3)/40e6 = 80/40e6  = 2 us  → 500 Kbit/s, sample point ~79%
 //     2 M: (0+1)*(14+ 3+3)/40e6 = 20/40e6  = 500 ns → 2 Mbit/s,  sample point ~75%
 static const bit_timing_MCP251863_t MCP251863_BITTIMING_500K_40MHZ = {0, 62, 15, 15};
-static const bit_timing_MCP251863_t MCP251863_BITTIMING_2M_40MHZ   = {0, 14,  3,  3};
+static const bit_timing_MCP251863_t MCP251863_BITTIMING_2M_40MHZ   = {0, 14, 3, 3};
 
 // Auxiliary methods
-int create_message_obj(uint8_t* dst, const uint8_t* data,
-    msgtype_MCP251863_t msgtype, pl_size_MCP251863_t plSize, uint32_t id,
-    int brsEn
-);
+int create_message_obj(
+    uint8_t* dst,
+    const uint8_t* data,
+    msgtype_MCP251863_t msgtype,
+    pl_size_MCP251863_t plSize,
+    uint32_t id,
+    int brsEn);
 int create_message_obj(uint8_t* dst, const canfd_frame_MCP251863_t& frame, size_t* objectSize);
 
 // Main class
 class MCP251863 {
-    private:
-        spi_inst_t* spi;
-        uint CSPin, STBYPin;
-        int setCS(uint state);
+   private:
+    spi_inst_t* spi;
+    uint CSPin, STBYPin;
+    int setCS(uint state);
 
-    public:
-        wm_MCP251863_t writeMode;
-        rm_MCP251863_t readMode;
-        uint8_t txFifoNum;
-        uint8_t rxFifoNum;
-        int     rxTimestampEnabled;
+   public:
+    wm_MCP251863_t writeMode;
+    rm_MCP251863_t readMode;
+    uint8_t txFifoNum;
+    uint8_t rxFifoNum;
+    int rxTimestampEnabled;
 
-        MCP251863(spi_inst_t *ispi, uint iCSPin, uint iSTBYPin);
+    MCP251863(spi_inst_t* ispi, uint iCSPin, uint iSTBYPin);
 
-        int init();
-        int init(const init_config_MCP251863_t& config);
-        int reset();
-        int setBitTiming(bit_timing_MCP251863_t nominalTiming, bit_timing_MCP251863_t dataTiming);
+    int init();
+    int init(const init_config_MCP251863_t& config);
+    int reset();
+    int setBitTiming(bit_timing_MCP251863_t nominalTiming, bit_timing_MCP251863_t dataTiming);
 
-        int readAddr(uint16_t startAddr, uint8_t* dst, size_t len);
-        int writeAddr(uint16_t startAddr, uint8_t* data, size_t len);
+    int readAddr(uint16_t startAddr, uint8_t* dst, size_t len);
+    int writeAddr(uint16_t startAddr, uint8_t* data, size_t len);
 
-        int initGPFIFO(
-            uint8_t fifoNum, fifo_mode_MCP251863_t fifoMode,
-            pl_size_MCP251863_t plSize, uint8_t fSize,
-            uint8_t prioNum, tx_retran_mode_MCP251863_t retranMode,
-            fifo_int_mode_MCP251863_t* intFlagArray, size_t intFlagSize
-        );
+    int initGPFIFO(
+        uint8_t fifoNum,
+        fifo_mode_MCP251863_t fifoMode,
+        pl_size_MCP251863_t plSize,
+        uint8_t fSize,
+        uint8_t prioNum,
+        tx_retran_mode_MCP251863_t retranMode,
+        fifo_int_mode_MCP251863_t* intFlagArray,
+        size_t intFlagSize);
 
-        int initTEFIFO(
-            uint8_t fSize,
-            fifo_int_mode_MCP251863_t* intFlagArray, size_t intFlagSize
-        );
+    int initTEFIFO(uint8_t fSize, fifo_int_mode_MCP251863_t* intFlagArray, size_t intFlagSize);
 
     // not important for current purposes
     // int initMask();
 
-        int initFilter(uint8_t filNum, uint8_t fifoNum, uint16_t canSID);
+    int initFilter(uint8_t filNum, uint8_t fifoNum, uint16_t canSID);
 
-        int pushTXFIFO(uint8_t fifoNum, uint8_t* data, size_t pSize);
-        int reqSendTXFIFO(uint8_t fifoNum);
-        int popRXFIFO(uint8_t fifoNum, uint8_t* dst, size_t pSize);
+    int pushTXFIFO(uint8_t fifoNum, uint8_t* data, size_t pSize);
+    int reqSendTXFIFO(uint8_t fifoNum);
+    int popRXFIFO(uint8_t fifoNum, uint8_t* dst, size_t pSize);
 
-        int send_canfd(uint32_t id, const uint8_t* data, size_t len, bool brs, bool extended_id = false);
-        int send_canfd(uint8_t fifoNum, uint32_t id, const uint8_t* data, size_t len, bool brs, bool extended_id = false);
-        int send_frame(const canfd_frame_MCP251863_t& frame);
-        int send_frame(uint8_t fifoNum, const canfd_frame_MCP251863_t& frame);
+    int send_canfd(
+        uint32_t id, const uint8_t* data, size_t len, bool brs, bool extended_id = false);
+    int send_canfd(
+        uint8_t fifoNum,
+        uint32_t id,
+        const uint8_t* data,
+        size_t len,
+        bool brs,
+        bool extended_id = false);
+    int send_frame(const canfd_frame_MCP251863_t& frame);
+    int send_frame(uint8_t fifoNum, const canfd_frame_MCP251863_t& frame);
 
-        canfd_frame_MCP251863_t read_canfd();
-        canfd_frame_MCP251863_t read_canfd(uint8_t fifoNum);
-        canfd_frame_MCP251863_t read_frame();
-        canfd_frame_MCP251863_t read_frame(uint8_t fifoNum);
+    canfd_frame_MCP251863_t read_canfd();
+    canfd_frame_MCP251863_t read_canfd(uint8_t fifoNum);
+    canfd_frame_MCP251863_t read_frame();
+    canfd_frame_MCP251863_t read_frame(uint8_t fifoNum);
 
-        int setContMode(cmode_MCP251863_t mode);
-        int setTranMode(tmode_MCP251863_t mode);
+    int setContMode(cmode_MCP251863_t mode);
+    int setTranMode(tmode_MCP251863_t mode);
 
-        int setInterrupts(int_en_MCP251863_t* intEnArray, size_t intEnSize);
-        int setPinMode(io_num_MCP251863_t pin, iomode_MCP251863_t mode);
+    int setInterrupts(int_en_MCP251863_t* intEnArray, size_t intEnSize);
+    int setPinMode(io_num_MCP251863_t pin, iomode_MCP251863_t mode);
 
-        status_MCP251863_t getStatus();
-        fifo_status_MCP251863_t getFIFOStatus(uint8_t fifoNum);
+    status_MCP251863_t getStatus();
+    fifo_status_MCP251863_t getFIFOStatus(uint8_t fifoNum);
 
-        int getTXCode();
-        int getRXCode();
-        int getFLTCode();
-        int getICode();
+    int getTXCode();
+    int getRXCode();
+    int getFLTCode();
+    int getICode();
 };
 
 #endif
