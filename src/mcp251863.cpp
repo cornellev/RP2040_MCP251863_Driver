@@ -192,9 +192,9 @@ static canfd_frame_MCP251863_t decode_rx_header(const uint8_t* header, bool time
 
 int create_message_obj(
     uint8_t* dst, const uint8_t* data,
-    msgtype_MCP251863_t msgtype, pl_size_MCP251863_t plSize, uint32_t id, 
+    msgtype_MCP251863_t msgtype, pl_size_MCP251863_t plSize, uint32_t id,
     int brsEn
-) 
+)
 {
     int num_bytes = pl_size_to_num_bytes(plSize);
     if ((num_bytes == 0) && (plSize != PL_SIZE_MCP_0)) {
@@ -256,7 +256,7 @@ MCP251863::MCP251863(spi_inst_t *ispi, uint iCSPin, uint iSTBYPin) {
 
 int MCP251863::writeAddr(uint16_t startAddr, uint8_t* data, size_t len) {
     cmd_MCP251863_t cmd;
-    switch(writeMode) {
+    switch (writeMode) {
         case WM_MCP_NORM:
             cmd = CMD_MCP_WRITA;
             break;
@@ -265,12 +265,12 @@ int MCP251863::writeAddr(uint16_t startAddr, uint8_t* data, size_t len) {
             break;
         case WM_MCP_SAFE:
             cmd = CMD_MCP_WRASF;
-        default: 
+        default:
             return 0;
-    } 
+    }
     // form message CCCC-AAAAAAAAAAAA
-    uint8_t message[2]; 
-    
+    uint8_t message[2];
+
     message[0] = (cmd << 4) | (startAddr >> 8);
     message[1] = (startAddr << 4) >> 4;
 
@@ -298,23 +298,23 @@ int MCP251863::readAddr(uint16_t startAddr, uint8_t* dst, size_t len) {
     cmd_MCP251863_t cmd;
     uint8_t message[3];
     uint16_t crc;
-    switch(readMode) {
+    switch (readMode) {
         case RM_MCP_NORM:
             cmd = CMD_MCP_READA;
             break;
         case RM_MCP_CRC:
             cmd = CMD_MCP_RDACR;
             break;
-        default: 
+        default:
             return 0;
-    } 
+    }
     // form message CCCC-AAAAAAAAAAAA
     message[0] = (cmd << 4) | (startAddr >> 8);
     message[1] = (startAddr << 4) >> 4;
 
-    //if (readMode == rm_MCP251863_t::READ_CRC) {
-    //    message[2] = (uint8_t)len;
-    //}
+    // if (readMode == rm_MCP251863_t::READ_CRC) {
+    //     message[2] = (uint8_t)len;
+    // }
 
     // drive CS pin low
     asm volatile("nop \n nop \n nop");
@@ -325,15 +325,15 @@ int MCP251863::readAddr(uint16_t startAddr, uint8_t* dst, size_t len) {
     spi_write_blocking(spi, message, 2);
 
     // write extra bits for len if CRC mode
-    //if (readMode == rm_MCP251863_t::READ_CRC) {
+    // if (readMode == rm_MCP251863_t::READ_CRC) {
     //    spi_write_blocking(spi, (message)+2, 1);
     //}
 
     // read out data
     spi_read_blocking(spi, 0, dst, len);
-    
+
     // read out CRC
-    //if (readMode == rm_MCP251863_t::READ_CRC) {
+    // if (readMode == rm_MCP251863_t::READ_CRC) {
     //    spi_read16_blocking(spi, 0, &crc, 1);
     //}
 
@@ -497,7 +497,6 @@ int MCP251863::reset() {
 
     message[0] = cmd << 4;
 
-
     // drive CS pin low
     asm volatile("nop \n nop \n nop");
     gpio_put(CSPin, 0);
@@ -515,25 +514,27 @@ int MCP251863::reset() {
 }
 
 int MCP251863::initGPFIFO(
-    uint8_t fifoNum, fifo_mode_MCP251863_t fifoMode, 
-    pl_size_MCP251863_t plSize, uint8_t fSize,
-    uint8_t prioNum, tx_retran_mode_MCP251863_t retranMode,
-    fifo_int_mode_MCP251863_t* intFlagArray, size_t intFlagSize
-)
-{
+    uint8_t fifoNum,
+    fifo_mode_MCP251863_t fifoMode,
+    pl_size_MCP251863_t plSize,
+    uint8_t fSize,
+    uint8_t prioNum,
+    tx_retran_mode_MCP251863_t retranMode,
+    fifo_int_mode_MCP251863_t* intFlagArray,
+    size_t intFlagSize) {
     uint8_t buff[4];
     uint16_t addr = REG_MCP_C1FIFOCONx + 12*(fifoNum-1);
 
     uint8_t intFlags = 0;
-    for (int i=0; i<intFlagSize; i++) {
+    for (int i = 0; i < intFlagSize; i++) {
         intFlags |= intFlagArray[i];
     }
 
     buff[0] = intFlags | (fifoMode << 7);
-    buff[1] = 0b00000000; 
+    buff[1] = 0b00000000;
     //assumes prioNum <= 32
     buff[2] = 0b00000000 | (retranMode << 5) | prioNum;
-    //assumes fSize <= 32
+    // assumes fSize <= 32
     buff[3] = ((plSize & 0b111) << 5) | fSize;
 
     writeAddr(addr, buff, 4);
@@ -541,28 +542,25 @@ int MCP251863::initGPFIFO(
 }
 
 int MCP251863::initTEFIFO(
-    uint8_t fSize, 
-    fifo_int_mode_MCP251863_t* intFlagArray, size_t intFlagSize
-)
-{
+    uint8_t fSize, fifo_int_mode_MCP251863_t* intFlagArray, size_t intFlagSize) {
     uint8_t buff[4];
     reg_addr_MCP251863_t addr = REG_MCP_C1TEFCON;
 
     uint8_t intFlags = 0;
-    for (int i=0; i<intFlagSize; i++) {
+    for (int i = 0; i < intFlagSize; i++) {
         intFlags |= intFlagArray[i];
     }
 
-    //wait for reset bit to clear
+    // wait for reset bit to clear
     do {
         readAddr(addr + 1, buff, 1);
     } while ((buff[0] >> 2) == 1);
 
-    //set bytes
+    // set bytes
     buff[0] = 0b00000000 | intFlags;
     buff[1] = 0b00000000;
     buff[2] = 0b00000000;
-    //assumes fSize <= 32
+    // assumes fSize <= 32
     buff[3] = 0b00000000 | fSize;
 
     writeAddr(addr, buff, 4);
@@ -570,30 +568,31 @@ int MCP251863::initTEFIFO(
 }
 
 int MCP251863::initTXQ(
-    pl_size_MCP251863_t plSize, uint8_t fSize,
-    uint8_t prioNum, tx_retran_mode_MCP251863_t retranMode,
-    fifo_int_mode_MCP251863_t* intFlagArray, size_t intFlagSize
-)
-{
+    pl_size_MCP251863_t plSize,
+    uint8_t fSize,
+    uint8_t prioNum,
+    tx_retran_mode_MCP251863_t retranMode,
+    fifo_int_mode_MCP251863_t* intFlagArray,
+    size_t intFlagSize) {
     uint8_t buff[4];
-    reg_addr_MCP251863_t addr = REG_MCP_C1TXQCON ;
+    reg_addr_MCP251863_t addr = REG_MCP_C1TXQCON;
 
     uint8_t intFlags = 0;
-    for (int i=0; i<intFlagSize; i++) {
+    for (int i = 0; i < intFlagSize; i++) {
         intFlags |= intFlagArray[i];
     }
 
-    //wait for reset bit to clear
+    // wait for reset bit to clear
     do {
         readAddr(addr + 1, buff, 1);
     } while ((buff[0] >> 2) == 1);
 
-    //set bytes
+    // set bytes
     buff[0] = 0b00000000 | intFlags;
     buff[1] = 0b00000000;
-    //assumes prioNum <= 32
+    // assumes prioNum <= 32
     buff[2] = 0b00000000 | (retranMode << 5) | prioNum;
-    //assumes fSize <= 32
+    // assumes fSize <= 32
     buff[3] = ((plSize & 0b111) << 5) | fSize;
 
     writeAddr(addr, buff, 4);
@@ -601,14 +600,14 @@ int MCP251863::initTXQ(
 }
 
 int MCP251863::initFilter(uint8_t fltNum, uint8_t fifoNum, uint16_t canSID) {
-    uint16_t flt_addr = REG_MCP_C1FLTCONx + fltNum/4;
-    uint16_t flt_obj_addr = REG_MCP_C1FLTOBJx + 8*fltNum;
+    uint16_t flt_addr = REG_MCP_C1FLTCONx + fltNum / 4;
+    uint16_t flt_obj_addr = REG_MCP_C1FLTOBJx + 8 * fltNum;
 
     uint8_t buff[4];
 
-    //enable filter, assumes fifoNum <= 32
+    // enable filter, assumes fifoNum <= 32
     buff[0] = 0b00000000 | fifoNum | (1 << 7);
-    writeAddr(flt_addr + fltNum%4, buff, 1);
+    writeAddr(flt_addr + fltNum % 4, buff, 1);
 
     // Pack SID[10:0] (and SID11 in bit 11) into C1FLTOBJn bits [11:0]
     buff[0] = canSID & 0xFF;
@@ -622,58 +621,58 @@ int MCP251863::initFilter(uint8_t fltNum, uint8_t fifoNum, uint16_t canSID) {
 }
 
 int MCP251863::pushTXFIFO(uint8_t fifoNum, uint8_t* data, size_t pSize) {
-    uint16_t fifo_addr = REG_MCP_C1FIFOCONx + 12*(fifoNum-1);
-    uint16_t fifo_stat_addr = REG_MCP_C1FIFOSTAx + 12*(fifoNum-1);
-    uint16_t fifo_point_addr = REG_MCP_C1FIFOUAx + 12*(fifoNum-1);
+    uint16_t fifo_addr = REG_MCP_C1FIFOCONx + 12 * (fifoNum - 1);
+    uint16_t fifo_stat_addr = REG_MCP_C1FIFOSTAx + 12 * (fifoNum - 1);
+    uint16_t fifo_point_addr = REG_MCP_C1FIFOUAx + 12 * (fifoNum - 1);
 
     uint8_t buff;
     uint16_t message_addr;
 
-    //check if fifo nonfull, return if it is. We will implement real error handling later
+    // check if fifo nonfull, return if it is. We will implement real error handling later
     readAddr(fifo_stat_addr, &buff, 1);
     if ((buff & 0b00000001) == 0) {
         return 0;
     }
 
-    //get pointer to message object from FIFO, the addresses are only 12-bits wide?
+    // get pointer to message object from FIFO, the addresses are only 12-bits wide?
     readAddr(fifo_point_addr, (uint8_t*)&message_addr, 2);
-    message_addr += 0x400; 
+    message_addr += 0x400;
 
-    //write message to addr
+    // write message to addr
     writeAddr(message_addr, data, pSize);
 
-    //increment pointer
+    // increment pointer
     buff = 0b00000001;
-    writeAddr(fifo_addr+1, &buff, 1);
+    writeAddr(fifo_addr + 1, &buff, 1);
 
     return 1;
 }
 
 int MCP251863::reqSendTXFIFO(uint8_t fifoNum) {
-    uint16_t addr = REG_MCP_C1FIFOCONx + 12*(fifoNum-1);
+    uint16_t addr = REG_MCP_C1FIFOCONx + 12 * (fifoNum - 1);
     uint8_t buff;
-    
-    //dont know if this is needed, but wait until the fifo increments
+
+    // dont know if this is needed, but wait until the fifo increments
     do {
-        readAddr(addr+1, &buff, 1);
+        readAddr(addr + 1, &buff, 1);
     } while ((buff & 0b00000001) == 1);
 
-    //set bit to request txfifo send
+    // set bit to request txfifo send
     buff = 0b00000010;
-    writeAddr(addr+1, &buff, 1);
-    
+    writeAddr(addr + 1, &buff, 1);
+
     return 1;
 }
 
 int MCP251863::popRXFIFO(uint8_t fifoNum, uint8_t* dst, size_t pSize) {
-    uint16_t fifo_addr = REG_MCP_C1FIFOCONx + 12*(fifoNum-1);
-    uint16_t fifo_stat_addr = REG_MCP_C1FIFOSTAx + 12*(fifoNum-1);
-    uint16_t fifo_point_addr = REG_MCP_C1FIFOUAx + 12*(fifoNum-1);
+    uint16_t fifo_addr = REG_MCP_C1FIFOCONx + 12 * (fifoNum - 1);
+    uint16_t fifo_stat_addr = REG_MCP_C1FIFOSTAx + 12 * (fifoNum - 1);
+    uint16_t fifo_point_addr = REG_MCP_C1FIFOUAx + 12 * (fifoNum - 1);
 
     uint8_t buff;
     uint16_t message_addr;
 
-    //check if fifo nonempty, if it is return
+    // check if fifo nonempty, if it is return
     readAddr(fifo_stat_addr, &buff, 1);
     if ((buff & 0b00000001) == 0) {
         return 0;
@@ -682,12 +681,12 @@ int MCP251863::popRXFIFO(uint8_t fifoNum, uint8_t* dst, size_t pSize) {
     readAddr(fifo_point_addr, (uint8_t*)&message_addr, 2);
     message_addr += 0x400;
 
-    //read in message
+    // read in message
     readAddr(message_addr, dst, pSize);
 
-    //decrement fifo
+    // decrement fifo
     buff = 0b00000001;
-    writeAddr(fifo_addr+1, &buff, 1);
+    writeAddr(fifo_addr + 1, &buff, 1);
 
     return 1;
 }
@@ -834,24 +833,23 @@ int MCP251863::setContMode(cmode_MCP251863_t contMode) {
     uint16_t addr = REG_MCP_C1CON;
     uint8_t buff0, buff1;
 
-    //read current contMode 
-    readAddr(addr+2, &buff0, 1);
+    // read current contMode
+    readAddr(addr + 2, &buff0, 1);
 
     if ((buff0 >> 5) != CMODE_MCP_CONF) {
-        readAddr(addr+3, &buff1, 1);
+        readAddr(addr + 3, &buff1, 1);
         buff1 = (buff1 & 0b11111000) | CMODE_MCP_CONF;
-        writeAddr(addr+3, &buff1, 1);
+        writeAddr(addr + 3, &buff1, 1);
 
         do {
-            readAddr(addr+2, &buff0, 1);
+            readAddr(addr + 2, &buff0, 1);
         } while ((buff0 >> 5) != CMODE_MCP_CONF);
-
     }
 
-    //write intended contMode
-    readAddr(addr+3, &buff1, 1);
+    // write intended contMode
+    readAddr(addr + 3, &buff1, 1);
     buff1 = (buff1 & 0b11111000) | contMode;
-    writeAddr(addr+3, &buff1, 1);
+    writeAddr(addr + 3, &buff1, 1);
 
     return 1;
 }
@@ -862,12 +860,12 @@ int MCP251863::setTranMode(tmode_MCP251863_t mode) {
 }
 
 int MCP251863::setInterrupts(int_en_MCP251863_t* intEnArray, size_t intEnSize) {
-    //illegal size
+    // illegal size
     if (intEnSize > 32) {
         return 0;
     }
     uint32_t message = 0;
-    for (int i=0; i<intEnSize; i++) {
+    for (int i = 0; i < intEnSize; i++) {
         message |= intEnArray[i];
     }
     writeAddr(REG_MCP_C1INT, (uint8_t*)&message, 4);
@@ -875,7 +873,7 @@ int MCP251863::setInterrupts(int_en_MCP251863_t* intEnArray, size_t intEnSize) {
 }
 
 int MCP251863::setPinMode(io_num_MCP251863_t pin, iomode_MCP251863_t mode) {
-    uint8_t buff[4]= {0};
+    uint8_t buff[4] = {0};
     readAddr(REG_MCP_IOCON, buff, 4);
     if (pin == IO_MCP_INT0) {
         switch (mode) {
@@ -893,8 +891,7 @@ int MCP251863::setPinMode(io_num_MCP251863_t pin, iomode_MCP251863_t mode) {
             default:
                 return 0;
         }
-    } 
-    else if (pin == IO_MCP_INT1) {
+    } else if (pin == IO_MCP_INT1) {
         switch (mode) {
             case IOMODE_MCP_GPIO_IN:
                 buff[0] |= 0b00000010;
@@ -910,8 +907,7 @@ int MCP251863::setPinMode(io_num_MCP251863_t pin, iomode_MCP251863_t mode) {
             default:
                 return 0;
         }
-    }
-    else {
+    } else {
         return 0;
     }
     writeAddr(REG_MCP_IOCON, buff, 4);

@@ -1,60 +1,51 @@
 #ifndef MCP251863_H
 #define MCP251863_H
 
-#include "pico/stdlib.h"
-#include "hardware/spi.h"
-
-#include <string.h>
 #include <stdlib.h>
+#include <string.h>
+
 #include <cstdio>
 
-//Constants and magic numbers
+#include "hardware/spi.h"
+#include "pico/stdlib.h"
+
+// Constants and magic numbers
 const uint MCP251863_BAUD_RATE = 160000000;
 
-//Enums for various device modes/configs
+// Enums for various device modes/configs
 
-//write mode
-enum wm_MCP251863_t {
-    WM_MCP_NORM = 0,
-    WM_MCP_CRC = 1,
-    WM_MCP_SAFE = 2
-};
+// write mode
+enum wm_MCP251863_t { WM_MCP_NORM = 0, WM_MCP_CRC = 1, WM_MCP_SAFE = 2 };
 
-//read mode
-enum rm_MCP251863_t {
-    RM_MCP_NORM = 0,
-    RM_MCP_CRC = 1
-};
+// read mode
+enum rm_MCP251863_t { RM_MCP_NORM = 0, RM_MCP_CRC = 1 };
 
-//command type
+// command type
 enum cmd_MCP251863_t : uint8_t {
-    CMD_MCP_RESET = 0b0000, //reset
-    CMD_MCP_READA = 0b0011, //read address
-    CMD_MCP_WRITA = 0b0010, //write address
-    CMD_MCP_RDACR = 0b1011, //read address crc
-    CMD_MCP_WRACR = 0b1010, //write adress crc
-    CMD_MCP_WRASF = 0b1100  //write address safe
+    CMD_MCP_RESET = 0b0000,  // reset
+    CMD_MCP_READA = 0b0011,  // read address
+    CMD_MCP_WRITA = 0b0010,  // write address
+    CMD_MCP_RDACR = 0b1011,  // read address crc
+    CMD_MCP_WRACR = 0b1010,  // write adress crc
+    CMD_MCP_WRASF = 0b1100   // write address safe
 };
 
-//controller mode
+// controller mode
 enum cmode_MCP251863_t : uint8_t {
-    CMODE_MCP_CONF          = 0b100, //config
-    CMODE_MCP_CFD_NORM      = 0b000, //canfd normal
-    CMODE_MCP_C2_NORM       = 0b110, //can2 normal
-    CMODE_MCP_SLP           = 0b001, //sleep
-    CMODE_MCP_LIST_ONLY     = 0b011, //listen only
-    CMODE_MCP_RESTR_OP      = 0b111, //restricted operation
-    CMODE_MCP_INT_LOOP      = 0b010, //internal loopback
-    CMODE_MCP_EXT_LOOP      = 0b101  //external loopback
+    CMODE_MCP_CONF      = 0b100,  // config
+    CMODE_MCP_CFD_NORM  = 0b000,  // canfd normal
+    CMODE_MCP_C2_NORM   = 0b110,  // can2 normal
+    CMODE_MCP_SLP       = 0b001,  // sleep
+    CMODE_MCP_LIST_ONLY = 0b011,  // listen only
+    CMODE_MCP_RESTR_OP  = 0b111,  // restricted operation
+    CMODE_MCP_INT_LOOP  = 0b010,  // internal loopback
+    CMODE_MCP_EXT_LOOP  = 0b101   // external loopback
 };
 
-//tranceiver mode
-enum tmode_MCP251863_t {
-    TMODE_MCP_STBY = 1,
-    TMODE_MCP_NORM = 0
-};
+// tranceiver mode
+enum tmode_MCP251863_t { TMODE_MCP_STBY = 1, TMODE_MCP_NORM = 0 };
 
-//tx fifo retransmit mode
+// tx fifo retransmit mode
 enum tx_retran_mode_MCP251863_t : uint8_t {
     TXRET_MCP_NONE  = 0b00,
     TXRET_MCP_THREE = 0b01,
@@ -62,11 +53,11 @@ enum tx_retran_mode_MCP251863_t : uint8_t {
 };
 
 enum fifo_int_mode_MCP251863_t : uint8_t {
-    FIFO_INT_MCP_NFNE = 0b00000001, //fifo not full (TX), fifo not empty (RX)
-    FIFO_INT_MCP_HFHE_= 0b00000010, //fifo half full(TX), fifo half empty (RX)
-    FIFO_INT_MCP_FFEE = 0b00000100, //fifo full (TX), fifo empty (RX),
-    FIFO_INT_MCP_OVFL = 0b00001000, //fifo overflow (RX),
-    FIFO_INT_MCO_TXAT = 0b00010000, //transmits exhausted,
+    FIFO_INT_MCP_NFNE  = 0b00000001,  // fifo not full (TX), fifo not empty (RX)
+    FIFO_INT_MCP_HFHE_ = 0b00000010,  // fifo half full(TX), fifo half empty (RX)
+    FIFO_INT_MCP_FFEE  = 0b00000100,  // fifo full (TX), fifo empty (RX),
+    FIFO_INT_MCP_OVFL  = 0b00001000,  // fifo overflow (RX),
+    FIFO_INT_MCO_TXAT  = 0b00010000,  // transmits exhausted,
 };
 
 enum reg_addr_MCP251863_t : uint16_t {
@@ -105,34 +96,29 @@ enum reg_addr_MCP251863_t : uint16_t {
     REG_MCP_C1MASKx        = 0x1F4  // 8 addresses between each
 };
 
-enum fifo_mode_MCP251863_t : uint8_t {
-    FIFO_MODE_MCP_TX = 1,
-    FIFO_MODE_MCP_RX = 0
-};
+enum fifo_mode_MCP251863_t : uint8_t { FIFO_MODE_MCP_TX = 1, FIFO_MODE_MCP_RX = 0 };
 
-//payload size for fifo
+// payload size for fifo
 enum pl_size_MCP251863_t : uint8_t {
-    PL_SIZE_MCP_0   = 0b0000,
-    PL_SIZE_MCP_1   = 0b0001,
-    PL_SIZE_MCP_2   = 0b0010,
-    PL_SIZE_MCP_3   = 0b0011,
-    PL_SIZE_MCP_4   = 0b0100,
-    PL_SIZE_MCP_5   = 0b0101,
-    PL_SIZE_MCP_6   = 0b0110,
-    PL_SIZE_MCP_7   = 0b0111,
-    PL_SIZE_MCP_8   = 0b1000,
-    PL_SIZE_MCP_12  = 0b1001,
-    PL_SIZE_MCP_16  = 0b1010,
-    PL_SIZE_MCP_20  = 0b1011,
-    PL_SIZE_MCP_24  = 0b1100,
-    PL_SIZE_MCP_32  = 0b1101,
-    PL_SIZE_MCP_48  = 0b1110,
-    PL_SIZE_MCP_64  = 0b1111
+    PL_SIZE_MCP_0  = 0b0000,
+    PL_SIZE_MCP_1  = 0b0001,
+    PL_SIZE_MCP_2  = 0b0010,
+    PL_SIZE_MCP_3  = 0b0011,
+    PL_SIZE_MCP_4  = 0b0100,
+    PL_SIZE_MCP_5  = 0b0101,
+    PL_SIZE_MCP_6  = 0b0110,
+    PL_SIZE_MCP_7  = 0b0111,
+    PL_SIZE_MCP_8  = 0b1000,
+    PL_SIZE_MCP_12 = 0b1001,
+    PL_SIZE_MCP_16 = 0b1010,
+    PL_SIZE_MCP_20 = 0b1011,
+    PL_SIZE_MCP_24 = 0b1100,
+    PL_SIZE_MCP_32 = 0b1101,
+    PL_SIZE_MCP_48 = 0b1110,
+    PL_SIZE_MCP_64 = 0b1111
 };
 
-enum err_MCP251863_t : uint8_t {
-    ERR_MCP_FIFO_FULL = 0
-};
+enum err_MCP251863_t : uint8_t { ERR_MCP_FIFO_FULL = 0 };
 
 enum int_en_MCP251863_t : uint32_t {
     INT_EN_MCP_TXIF     = 0b00000000000000000000000000000001,
@@ -163,23 +149,11 @@ enum int_en_MCP251863_t : uint32_t {
     INT_EN_MCP_IVMIE    = 0b10000000000000000000000000000000
 };
 
-enum io_num_MCP251863_t {
-    IO_MCP_INT0 = 0,
-    IO_MCP_INT1 = 1
-};
+enum io_num_MCP251863_t { IO_MCP_INT0 = 0, IO_MCP_INT1 = 1 };
 
-enum iomode_MCP251863_t {
-    IOMODE_MCP_INT  = 0,
-    IOMODE_MCP_GPIO_OUT = 1,
-    IOMODE_MCP_GPIO_IN  = 2
-};
+enum iomode_MCP251863_t { IOMODE_MCP_INT = 0, IOMODE_MCP_GPIO_OUT = 1, IOMODE_MCP_GPIO_IN = 2 };
 
-enum msgtype_MCP251863_t {
-    CAN_BASE_MCP = 0,
-    CAN_FD_BASE_MCP = 1,
-    CAN_EXT = 2,
-    CAN_FD_EXT = 3
-};
+enum msgtype_MCP251863_t { CAN_BASE_MCP = 0, CAN_FD_BASE_MCP = 1, CAN_EXT = 2, CAN_FD_EXT = 3 };
 
 // Structs
 
@@ -272,7 +246,7 @@ int create_message_obj(uint8_t* dst, const uint8_t* data,
 );
 int create_message_obj(uint8_t* dst, const canfd_frame_MCP251863_t& frame, size_t* objectSize);
 
-//Main class
+// Main class
 class MCP251863 {
     private:
         spi_inst_t* spi;
@@ -308,11 +282,8 @@ class MCP251863 {
             fifo_int_mode_MCP251863_t* intFlagArray, size_t intFlagSize
         );
 
-        int initTXQ(
-            pl_size_MCP251863_t plSize, uint8_t fSize,
-            uint8_t prioNum, tx_retran_mode_MCP251863_t retranMode,
-            fifo_int_mode_MCP251863_t* intFlagArray, size_t intFlagSize
-        );
+    // not important for current purposes
+    // int initMask();
 
         int initFilter(uint8_t filNum, uint8_t fifoNum, uint16_t canSID);
 
