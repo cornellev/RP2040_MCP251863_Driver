@@ -1,43 +1,55 @@
+#include <stdio.h>
+#include "pico/stdlib.h"
+#include "hardware/spi.h"
 #include "mcp251863.h"
 
-#include <stdio.h>
-
-static const uint PIN_MISO = 16;
-static const uint PIN_CS = 17;
-static const uint PIN_SCK = 18;
-static const uint PIN_MOSI = 19;
-static const uint PIN_STBY = 20;
+// adjust these pins to match your board
+static constexpr uint SPI_SCK  = 2;
+static constexpr uint SPI_TX   = 3;
+static constexpr uint SPI_RX   = 4;
+static constexpr uint CS_PIN   = 5;
+static constexpr uint STBY_PIN = 6;
 
 int main() {
     stdio_init_all();
+    sleep_ms(2000);  // wait for USB serial to connect
+    printf("TX example starting\n");
 
-    spi_init(spi0, 10 * 1000 * 1000);
-    gpio_set_function(PIN_MISO, GPIO_FUNC_SPI);
-    gpio_set_function(PIN_SCK, GPIO_FUNC_SPI);
-    gpio_set_function(PIN_MOSI, GPIO_FUNC_SPI);
+    spi_init(spi0, MCP251863_BAUD_RATE);
+    spi_set_format(spi0, 8, SPI_CPOL_0, SPI_CPHA_1, SPI_MSB_FIRST);
+    gpio_set_function(SPI_SCK, GPIO_FUNC_SPI);
+    gpio_set_function(SPI_TX,  GPIO_FUNC_SPI);
+    gpio_set_function(SPI_RX,  GPIO_FUNC_SPI);
 
-    MCP251863 can(spi0, PIN_CS, PIN_STBY);
-    if (!can.init()) {
-        printf("MCP251863 init failed\n");
-        while (true) {
-            sleep_ms(1000);
+    MCP251863 mcp(spi0, CS_PIN, STBY_PIN);
+
+    if (!mcp.init()) {
+        printf("init failed\n");
+        return 1;
+    }
+    printf("init ok\n");
+
+    // known payload: 8 bytes counting up from 0
+    uint8_t data[8] = {0x00, 0x01, 0x02, 0x03, 0x04, 0x05, 0x06, 0x07};
+    uint32_t id = 0x123;
+    int count = 0;
+
+    for (;;) {
+        // put the frame count in the first byte so you can verify sequence on the receiver
+        data[0] = (uint8_t)(count & 0xFF);
+
+        int ok = mcp.send_canfd(id, data, sizeof(data), true);
+        if (ok) {
+            printf("sent frame %d  id=0x%03X  data[0]=%02X\n", count, id, data[0]);
+        } else {
+            Status s = mcp.getStatus();
+            printf("send failed  bus_off=%d  tx_err=%d  tx_count=%d\n",
+                s.bus_off, s.tx_error_passive, s.tx_error_count);
         }
+
+        count++;
+        sleep_ms(500);
     }
 
-    uint8_t payload[8] = {0xCA, 0xFE, 0x25, 0x18, 0x63, 0x00, 0x00, 0x01};
-    while (true) {
-        if (can.send_canfd(0x123, payload, sizeof(payload), true)) {
-            printf("sent CAN FD frame id=0x123 len=8 brs=1\n");
-        }
-        else {
-            status_MCP251863_t status = can.getStatus();
-            printf("send failed: bus_off=%d tx_warn=%d rx_warn=%d tec=%u rec=%u\n",
-                status.bus_off,
-                status.tx_error_warning,
-                status.rx_error_warning,
-                status.tx_error_count,
-                status.rx_error_count);
-        }
-        sleep_ms(1000);
-    }
+    return 0;
 }
