@@ -1,6 +1,7 @@
 #include "mcp251863.h"
 
 #include <optional>
+#include <type_traits>
 
 // implementation of C++23 std::to_underlying
 template <typename T>
@@ -160,7 +161,7 @@ int validate_tx_frame(const CanFdFrame& frame) {
     if (frame.ide && (frame.id > 0x1FFFFFFF)) {
         return 0;
     }
-    if (!frame.ide && (frame.id > 0xFFF)) {
+    if (!frame.ide && (frame.id > 0x7FF)) {
         return 0;
     }
     if (!frame.fdf && frame.brs) {
