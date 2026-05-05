@@ -335,6 +335,9 @@ class MCP251863 {
     int getRXCode();
     int getFLTCode();
     int getICode();
+
+    uint8_t getTxFifoNum() const { return txFifoNum_; }
+    uint8_t getRxFifoNum() const { return rxFifoNum_; }
 };
 
 #endif
