@@ -5,7 +5,7 @@
 
 // implementation of C++23 std::to_underlying
 template <typename T>
-constexpr auto to_underlying(T value) -> typename std::underlying_type<T>::type {
+constexpr auto to_underlying(T value) -> std::underlying_type_t<T> {
     return static_cast<typename std::underlying_type<T>::type>(value);
 }
 
@@ -87,7 +87,9 @@ uint32_t encode_tdc(bool enable, uint8_t offset) {
         return 0;
     }
 
-    return (2UL << 16) | offset;
+    // 10 at bits 17:16 for TDCMOD auto
+    // TDCO at bits 14:6
+    return (2UL << 16) | ((offset & 0x7F) << 8);
 }
 
 InitConfig default_init_config() {
@@ -100,8 +102,11 @@ InitConfig default_init_config() {
     config.tdcOffset = 6;
     config.txFifo = 1;
     config.rxFifo = 2;
-    config.txFifoDepth = 7;
-    config.rxFifoDepth = 7;
+
+    // TODO: depth is 8 not 7, bc -1 smth i think???
+    config.txFifoDepth = 8;
+    config.rxFifoDepth = 8;
+
     config.txPayloadSize     = PayloadSize::PL_SIZE_MCP_64;
     config.rxPayloadSize     = PayloadSize::PL_SIZE_MCP_64;
 
@@ -363,10 +368,10 @@ int MCP251863::init() {
 }
 
 int MCP251863::init(const InitConfig& config) {
-    if ((config.txFifo < 1) || (config.txFifo > 31) ||
-        (config.rxFifo < 1) || (config.rxFifo > 31) ||
-        (config.txFifo == config.rxFifo) ||
-        (config.txFifoDepth > 31) || (config.rxFifoDepth > 31)) {
+    // txFifo, rxFifo, txFifoDepth, rxFifoDepth must be 1..32 inclusive
+    if ((config.txFifo < 1) || (config.txFifo > 31) || (config.rxFifo < 1) ||
+        (config.rxFifo > 31) || (config.txFifo == config.rxFifo) || (config.txFifoDepth < 1) ||
+        (config.txFifoDepth > 32) || (config.rxFifoDepth < 1) || (config.rxFifoDepth > 32)) {
         return 0;
     }
 
@@ -571,8 +576,8 @@ int MCP251863::initGeneralPurposeFifo(
     buff[1] = 0b00000000;
     //assumes prioNum <= 32
     buff[2] = 0b00000000 | (to_underlying(retranMode) << 5) | prioNum;
-    // assumes fSize <= 32
-    buff[3] = ((to_underlying(plSize) & 0b111) << 5) | fSize;
+    // FSIZE stores depth-1 (ie 0 = 1 message; 31 = 32 messages), but the caller passes 1..32
+    buff[3] = ((to_underlying(plSize) & 0b111) << 5) | ((fSize - 1) & 0x1F);
 
     writeAddr(addr, buff, 4);
     return 1;
@@ -597,8 +602,8 @@ int MCP251863::initTransmitEventFifo(
     buff[0] = 0b00000000 | intFlags;
     buff[1] = 0b00000000;
     buff[2] = 0b00000000;
-    // assumes fSize <= 32
-    buff[3] = 0b00000000 | fSize;
+    // FSIZE stores depth-1; caller passes 1..32
+    buff[3] = (fSize - 1) & 0x1F;
 
     writeAddr(addr, buff, 4);
     return 1;
@@ -629,8 +634,8 @@ int MCP251863::initTransmitQueue(
     buff[1] = 0b00000000;
     // assumes prioNum <= 32
     buff[2] = 0b00000000 | (to_underlying(retranMode) << 5) | prioNum;
-    // assumes fSize <= 32
-    buff[3] = ((to_underlying(plSize) & 0b111) << 5) | fSize;
+    // FSIZE stores depth-1; caller passes 1..32
+    buff[3] = ((to_underlying(plSize) & 0b111) << 5) | ((fSize - 1) & 0x1F);
 
     writeAddr(addr, buff, 4);
     return 1;
