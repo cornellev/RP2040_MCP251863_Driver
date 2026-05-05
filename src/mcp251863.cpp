@@ -68,11 +68,18 @@ uint8_t can_dlc_to_len(uint8_t dlc, bool fdf) {
     return canfd_dlc_to_len(dlc);
 }
 
-uint32_t encode_bit_timing(BitTiming timing) {
-    return ((uint32_t)timing.brp << 24) |
-        ((uint32_t)timing.tseg1 << 16) |
-        ((uint32_t)timing.tseg2 << 8) |
-        timing.sjw;
+uint32_t pack_nominal_bit_timing(BitTiming timing) {
+    return (((uint32_t)timing.brp & 0xFF) << 24) |
+           (((uint32_t)timing.tseg1 & 0xFF) << 16) |
+           (((uint32_t)timing.tseg2 & 0x7F) << 8) |
+           ((uint32_t)timing.sjw & 0x7F);
+}
+
+uint32_t pack_data_bit_timing(BitTiming timing) {
+    return (((uint32_t)timing.brp & 0xFF) << 24) |
+           (((uint32_t)timing.tseg1 & 0xFF) << 16) |
+           (((uint32_t)timing.tseg2 & 0x0F) << 8) |
+           ((uint32_t)timing.sjw & 0x0F);
 }
 
 uint32_t encode_tdc(bool enable, uint8_t offset) {
@@ -116,13 +123,12 @@ uint32_t pack_id_word(const CanFdFrame& frame) {
 }
 
 uint32_t pack_control_word(const CanFdFrame& frame) {
-    return ((frame.sequence & 0x7FFFFF) << 9) |
-        ((uint32_t)(frame.esi ? 1 : 0) << 8) |
-        ((uint32_t)(frame.fdf ? 1 : 0) << 7) |
-        ((uint32_t)(frame.brs ? 1 : 0) << 6) |
-        ((uint32_t)(frame.rtr ? 1 : 0) << 5) |
-        ((uint32_t)(frame.ide ? 1 : 0) << 4) |
-        (frame.dlc & 0x0F);
+    return ((uint32_t)frame.dlc & 0x0F) |
+           (frame.ide ? (1UL << 4) : 0) |
+           (frame.rtr ? (1UL << 5) : 0) |
+           (frame.brs ? (1UL << 6) : 0) |
+           (frame.fdf ? (1UL << 7) : 0) |
+           (frame.esi ? (1UL << 8) : 0);
 }
 
 void store_word(uint8_t* dst, uint32_t word) {
@@ -413,6 +419,18 @@ int MCP251863::init(const InitConfig& config) {
             }
         }
     }
+    if (config.sclkDiv2) {
+        for (int i=0; i<100; i++) {
+            readAddr(to_underlying(RegisterAddress::REG_MCP_OSC) + 1, &one, 1);
+            if ((one & (1 << 4)) != 0) {
+                break;
+            }
+            sleep_ms(1);
+            if (i == 99) {
+                return 0;
+            }
+        }
+    }
 
     if (!setBitTiming(config.nominalBitTiming, config.dataBitTiming)) {
         return 0;
@@ -501,10 +519,10 @@ int MCP251863::init(const InitConfig& config) {
 }
 
 int MCP251863::setBitTiming(BitTiming nominalTiming, BitTiming dataTiming) {
-    uint32_t reg = encode_bit_timing(nominalTiming);
+    uint32_t reg = pack_nominal_bit_timing(nominalTiming);
     writeAddr(to_underlying(RegisterAddress::REG_MCP_C1NBTCFG), (uint8_t*)&reg, 4);
 
-    reg = encode_bit_timing(dataTiming);
+    reg = pack_data_bit_timing(dataTiming);
     writeAddr(to_underlying(RegisterAddress::REG_MCP_C1DBTCFG), (uint8_t*)&reg, 4);
 
     return 1;
