@@ -642,14 +642,17 @@ int MCP251863::initTransmitQueue(
 }
 
 int MCP251863::initFilter(uint8_t fltNum, uint8_t fifoNum, uint16_t canSID) {
-    uint16_t flt_addr     = to_underlying(RegisterAddress::REG_MCP_C1FLTCONx) + fltNum / 4;
+    // C1FLTCONm holds four bytes, packed into 32 a 32 bit register
+    // the offset is REG_MCP_C1FLTCONx + 4*(N/4), and byte offset is N%4
+    // this simplifies is just REG_MCP_C1FLTCONx + N
+    uint16_t flt_addr     = to_underlying(RegisterAddress::REG_MCP_C1FLTCONx) + fltNum;
     uint16_t flt_obj_addr = to_underlying(RegisterAddress::REG_MCP_C1FLTOBJx) + 8 * fltNum;
 
     uint8_t buff[4];
 
     // enable filter, assumes fifoNum <= 32
     buff[0] = 0b00000000 | fifoNum | (1 << 7);
-    writeAddr(flt_addr + fltNum % 4, buff, 1);
+    writeAddr(flt_addr, buff, 1);
 
     // Pack SID[10:0] (and SID11 in bit 11) into C1FLTOBJn bits [11:0]
     buff[0] = canSID & 0xFF;
@@ -947,41 +950,37 @@ int MCP251863::setPinMode(IoPin pin, IoMode mode) {
     return 1;
 }
 
+// C1VEC layout
+// 31:24 rxcode (third byte)
+// 23:16 txcode (second byte)
+// 12:8 filhit (first byte, + some offset stuff)
+// 7:0 icode (zeroth byte)
+// 0x7F = no interrupt, so we & with it
+
 int MCP251863::getTXCode() {
-    // C1VEC bits [28:24] = TXCODE, located in byte 3 of the register
     uint8_t buff;
-    readAddr(to_underlying(RegisterAddress::REG_MCP_C1VEC) + 3, &buff, 1);
-    buff &= 0x1F;
-    if (buff > 0b0011111) {
-        return -1;
-    }
-    return buff;
+    readAddr(to_underlying(RegisterAddress::REG_MCP_C1VEC) + 2, &buff, 1);
+    return buff & 0x7F;
 }
 
 int MCP251863::getRXCode() {
-    // C1VEC bits [20:16] = RXCODE, located in byte 2 of the register
     uint8_t buff;
-    readAddr(to_underlying(RegisterAddress::REG_MCP_C1VEC) + 2, &buff, 1);
-    buff &= 0x1F;
-    if (buff > 0b0011111) {
-        return -1;
-    }
-    return buff;
+    readAddr(to_underlying(RegisterAddress::REG_MCP_C1VEC) + 3, &buff, 1);
+    return buff & 0x7F;
 }
 
 int MCP251863::getFLTCode() {
-    // C1VEC bits [12:8] = FILHIT, located in byte 1 of the register
+    // its 5 bits so we mask with 0x1F instead of 0x7F
     uint8_t buff;
     readAddr(to_underlying(RegisterAddress::REG_MCP_C1VEC) + 1, &buff, 1);
     return buff & 0x1F;
 }
 
 int MCP251863::getICode() {
-    // C1VEC bits [6:0] = ICODE, located in byte 0 of the register
     uint8_t buff;
     readAddr(to_underlying(RegisterAddress::REG_MCP_C1VEC), &buff, 1);
     buff &= 0x7F;
-    if (buff > 0b1001010) {
+    if (buff > 0b1001010) {  // this is the max valid ICODE value
         return -1;
     }
     return buff;

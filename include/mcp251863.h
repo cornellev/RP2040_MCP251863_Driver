@@ -88,7 +88,7 @@ enum class RegisterAddress : uint16_t {
     REG_MCP_C1FIFOSTAx = 0x60,   // 12 addresses between each
     REG_MCP_C1FIFOUAx  = 0x64,   // 12 addresses between each
     REG_MCP_C1FLTCONx  = 0x1D0,  // 4 addresses between each
-    REG_MCP_C1FLTOBJx  = 0x1F8,  // 8 addresses between each
+    REG_MCP_C1FLTOBJx  = 0x1F0,  // 8 addresses between each
     REG_MCP_C1MASKx    = 0x1F4   // 8 addresses between each
 };
 
