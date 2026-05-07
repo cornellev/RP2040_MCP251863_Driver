@@ -103,7 +103,9 @@ InitConfig default_init_config() {
     config.txFifo = 1;
     config.rxFifo = 2;
 
-    // TODO: depth is 8 not 7, bc -1 smth i think???
+    // FIFO depth is the number of message slots, 1..32
+    // FSIZE register field stores it as 0..31
+    // we subtract 1 from fsize at call sites
     config.txFifoDepth = 8;
     config.rxFifoDepth = 8;
 
@@ -602,7 +604,7 @@ int MCP251863::initTransmitEventFifo(
     buff[0] = 0b00000000 | intFlags;
     buff[1] = 0b00000000;
     buff[2] = 0b00000000;
-    // FSIZE stores depth-1; caller passes 1..32
+    // FSIZE stores depth-1 (ie 0 = 1 message; 31 = 32 messages), but the caller passes 1..32
     buff[3] = (fSize - 1) & 0x1F;
 
     writeAddr(addr, buff, 4);
@@ -634,7 +636,7 @@ int MCP251863::initTransmitQueue(
     buff[1] = 0b00000000;
     // assumes prioNum <= 32
     buff[2] = 0b00000000 | (to_underlying(retranMode) << 5) | prioNum;
-    // FSIZE stores depth-1; caller passes 1..32
+    // FSIZE stores depth-1 (ie 0 = 1 message; 31 = 32 messages), but the caller passes 1..32
     buff[3] = ((to_underlying(plSize) & 0b111) << 5) | ((fSize - 1) & 0x1F);
 
     writeAddr(addr, buff, 4);
